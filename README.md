@@ -55,6 +55,8 @@ streamlit run src/dashboard.py
 ```
 
 ## 📁 Project Structure
+
+```
 sp500-analyzer/
 │
 ├── data/               # Raw CSV data (gitignored)
@@ -65,6 +67,7 @@ sp500-analyzer/
 │   └── dashboard.py    # Streamlit interactive dashboard
 ├── requirements.txt
 └── README.md
+```
 
 ## 💡 Key SQL Concepts Used
 
