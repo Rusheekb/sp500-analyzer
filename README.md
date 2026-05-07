@@ -7,7 +7,7 @@ A data engineering project that pulls real stock market data, stores it in a SQL
 This project analyzes the performance of 5 major S&P 500 stocks (AAPL, MSFT, GOOGL, AMZN, JPM) from 2020-2024 using Python, SQL, and Streamlit.
 
 ## 📸 Dashboard Preview
-![Dashboard](/Users/rusheek/Desktop/dashboard.png)
+![Dashboard](dashboard.png)
 
 ## 🛠️ Tech Stack
 
