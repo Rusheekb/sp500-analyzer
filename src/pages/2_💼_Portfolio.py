@@ -60,11 +60,18 @@ else:
     with st.spinner("Fetching current prices..."):
         current_prices = {}
         for ticker in portfolio.keys():
-            info = get_stock_info(ticker)
-            if info and info["current_price"] != "N/A":
-                current_prices[ticker] = float(info["current_price"])
-
-    summary = get_portfolio_value(portfolio, current_prices)
+            try:
+                info = get_stock_info(ticker)
+                if info and info["current_price"] not in ["N/A", None, 0]:
+                    current_prices[ticker] = float(info["current_price"])
+                else:
+                    # Fallback to yfinance history
+                    import yfinance as yf
+                    hist = yf.Ticker(ticker).history(period="1d")
+                    if not hist.empty:
+                        current_prices[ticker] = float(hist["Close"].iloc[-1])
+            except:
+                pass
 
     # --- Summary Metrics ---
     st.markdown("#### 📊 Portfolio Summary")
@@ -96,7 +103,7 @@ else:
     </style>
     <div class="pos-container">
     """
-    for pos in summary["positions"]:
+    for pos in valid_positions:
         pl_class = "pos-positive" if pos["profit_loss"] >= 0 else "pos-negative"
         arrow = "▲" if pos["profit_loss"] >= 0 else "▼"
         positions_html += f"""
@@ -121,14 +128,19 @@ else:
     # --- Allocation Pie Chart ---
     st.markdown("#### 🥧 Portfolio Allocation")
 
-    col_pie, col_table = st.columns([1, 1])
+    valid_positions = [p for p in summary["positions"] if p["current_value"] > 0]
+
+    if not valid_positions:
+        st.warning("Current prices unavailable right now. Try refreshing in a moment.")
+    else:
+        col_pie, col_table = st.columns([1, 1])
 
     with col_pie:
         fig_pie, ax_pie = plt.subplots(figsize=(5, 5))
         fig_pie.patch.set_facecolor('#0a0a0a')
         ax_pie.set_facecolor('#0a0a0a')
-        labels = [p["ticker"] for p in summary["positions"]]
-        sizes = [p["current_value"] for p in summary["positions"]]
+        labels = [p["ticker"] for p in valid_positions]
+        sizes = [p["current_value"] for p in valid_positions]
         colors = ["#ff6600", "#ff8800", "#ffaa00", "#ffcc00",
                 "#00ff88", "#00ccff", "#cc00ff", "#ff0066",
                 "#00ffcc", "#ff3300", "#ffdd00", "#33ff00"]
@@ -157,7 +169,7 @@ else:
         st.markdown("""
         <div style='font-family: IBM Plex Mono, monospace;'>
         """, unsafe_allow_html=True)
-        for i, pos in enumerate(sorted(summary["positions"], key=lambda x: x["current_value"], reverse=True)):
+        for i, pos in enumerate(sorted(valid_positions, key=lambda x: x["current_value"], reverse=True)):
             pct = (pos["current_value"] / summary["total_value"] * 100) if summary["total_value"] > 0 else 0
             color = colors[i % len(colors)]
             st.markdown(f"""
