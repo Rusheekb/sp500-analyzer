@@ -21,7 +21,8 @@ st.markdown("""
 # --- Sidebar ---
 st.sidebar.header("🔍 News Settings")
 
-portfolio = load_portfolio()
+user_id = st.session_state.get("user_id")
+portfolio = load_portfolio(user_id) if user_id else {}
 portfolio_tickers = list(portfolio.keys())
 
 source = st.sidebar.radio(
