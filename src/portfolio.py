@@ -10,15 +10,12 @@ DATABASE_URL = os.getenv("DATABASE_URL")
 if DATABASE_URL and DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 
-# Use pg8000 driver which works better on Streamlit Cloud
-if DATABASE_URL and "postgresql" in DATABASE_URL:
-    if "?" not in DATABASE_URL:
-        engine = create_engine(DATABASE_URL + "?sslmode=require", 
-                             connect_args={"ssl_context": True})
-    else:
-        engine = create_engine(DATABASE_URL)
-else:
-    engine = create_engine(DATABASE_URL)
+# Convert to pg8000 driver explicitly
+if DATABASE_URL:
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+    DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+pg8000://", 1)
+
+engine = create_engine(DATABASE_URL)
 
 def init_db():
     """Create portfolio table if it doesn't exist."""
