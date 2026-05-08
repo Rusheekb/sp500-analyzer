@@ -30,14 +30,32 @@ def load_css():
     color: #000000 !important;
 }
 
-/* Sidebar primary button (Analyze / Fetch News) */
-[data-testid="stSidebar"] .stButton button {
+/* ALL buttons */
+.stButton button {
+    background-color: #1a1a1a !important;
+    color: #ff6600 !important;
+    border: 1px solid #ff6600 !important;
+    border-radius: 2px !important;
+    font-family: 'IBM Plex Mono', monospace !important;
+    text-transform: uppercase !important;
+    letter-spacing: 1px !important;
+}
+.stButton button:hover {
     background-color: #ff6600 !important;
     color: #000000 !important;
-    font-weight: 600 !important;
-    letter-spacing: 2px !important;
+}
+
+/* Sidebar buttons specifically — black text on orange */
+[data-testid="stSidebar"] .stButton > button {
+    background-color: #ff6600 !important;
+    color: #000000 !important;
+    font-weight: 700 !important;
     border: none !important;
     width: 100% !important;
+}
+[data-testid="stSidebar"] .stButton > button:hover {
+    background-color: #ff8800 !important;
+    color: #000000 !important;
 }
 [data-testid="stSidebar"] .stButton button:hover {
     background-color: #ff8800 !important;
