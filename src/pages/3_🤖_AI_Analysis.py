@@ -1,81 +1,132 @@
-from groq import Groq
+import streamlit as st
+import sys
 import os
-from dotenv import load_dotenv
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
-load_dotenv()
+import pandas as pd
+from fetch_data import fetch_stock_data, get_stock_info
+from portfolio import load_portfolio, get_portfolio_value
+from ai_analysis import generate_portfolio_analysis
 
-client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+st.set_page_config(page_title="AI Analysis", layout="wide", page_icon="🤖")
 
-def generate_portfolio_analysis(portfolio_data: list) -> str:
-    """
-    Generate personalized AI portfolio analysis using actual cost basis and P&L.
-    """
+st.markdown("""
+<style>
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;600&display=swap');
+.stApp { background-color: #0a0a0a; color: #e0e0e0; font-family: 'IBM Plex Sans', sans-serif; }
+[data-testid="stSidebar"] { background-color: #111111; border-right: 1px solid #ff6600; }
+h1 { color: #ff6600 !important; font-family: 'IBM Plex Mono', monospace !important; font-size: 24px !important; text-transform: uppercase !important; letter-spacing: 3px !important; border-bottom: 1px solid #ff6600; padding-bottom: 10px; }
+h2, h3, h4 { color: #ff6600 !important; font-family: 'IBM Plex Mono', monospace !important; font-size: 13px !important; text-transform: uppercase !important; letter-spacing: 2px !important; }
+hr { border-color: #222222 !important; }
+.stButton button { background-color: #1a1a1a !important; color: #ff6600 !important; border: 1px solid #ff6600 !important; border-radius: 2px !important; font-family: 'IBM Plex Mono', monospace !important; text-transform: uppercase !important; letter-spacing: 1px !important; }
+.stButton button:hover { background-color: #ff6600 !important; color: #000000 !important; }
+.stSelectbox > div > div { background-color: #1a1a1a !important; border: 1px solid #333333 !important; color: #e0e0e0 !important; }
+[data-testid="stMetric"] { background-color: #111111; border: 1px solid #222222; padding: 10px; border-radius: 2px; }
+[data-testid="stMetricLabel"] { color: #888888 !important; font-family: 'IBM Plex Mono', monospace !important; font-size: 11px !important; text-transform: uppercase !important; }
+[data-testid="stMetricValue"] { color: #ffffff !important; font-family: 'IBM Plex Mono', monospace !important; }
+</style>
+""", unsafe_allow_html=True)
 
-    # --- Build rich context ---
-    total_invested = sum(p.get("invested", 0) for p in portfolio_data)
-    total_value = sum(p.get("current_value", p.get("end", 0)) for p in portfolio_data)
-    total_pl = total_value - total_invested if total_invested > 0 else 0
-    total_pl_pct = (total_pl / total_invested * 100) if total_invested > 0 else 0
+st.title("🤖 AI Portfolio Analysis")
+st.markdown("""
+<div style='font-family: IBM Plex Mono, monospace; color: #888; font-size: 12px; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 1px;'>
+    Powered by Llama 3.3 via Groq — analyzes your portfolio or any custom set of tickers
+</div>
+""", unsafe_allow_html=True)
 
-    best = max(portfolio_data, key=lambda x: x.get("change_pct", 0))
-    worst = min(portfolio_data, key=lambda x: x.get("change_pct", 0))
+# --- Mode selector ---
+mode = st.radio(
+    "Analyze:",
+    ["My Portfolio", "Custom Tickers"],
+    horizontal=True
+)
 
-    # Build per-position breakdown
-    positions_detail = ""
-    for p in sorted(portfolio_data, key=lambda x: x.get("current_value", 0), reverse=True):
-        ticker = p["ticker"]
-        change_pct = p.get("change_pct", 0)
-        pl_dollars = p.get("profit_loss", 0)
-        invested = p.get("invested", 0)
-        current_value = p.get("current_value", p.get("end", 0))
-        shares = p.get("shares", "N/A")
-        avg_cost = p.get("avg_cost", "N/A")
-        current_price = p.get("current_price", p.get("end", "N/A"))
-        weight = (current_value / total_value * 100) if total_value > 0 else 0
+st.divider()
 
-        positions_detail += f"""
-        {ticker}:
-        - Portfolio weight: {weight:.1f}%
-        - Shares: {shares}
-        - Avg cost: ${avg_cost}
-        - Current price: ${current_price}
-        - Amount invested: ${invested:,.2f}
-        - Current value: ${current_value:,.2f}
-        - P&L: ${pl_dollars:,.2f} ({change_pct:+.2f}%)
-        """
+if mode == "My Portfolio":
+    portfolio = load_portfolio()
 
-    prompt = f"""You are a knowledgeable personal finance analyst reviewing someone's actual investment portfolio. 
-You have access to their real position data including what they paid, what it's worth now, and their actual profit/loss.
+    if not portfolio:
+        st.info("No portfolio positions found. Add stocks on the Portfolio page first.")
+    else:
+        st.markdown("#### 📋 Current Positions")
+        for ticker, pos in portfolio.items():
+            st.markdown(f"""
+            <div style='font-family: IBM Plex Mono, monospace; font-size: 12px; color: #ccc; padding: 4px 0;'>
+                <span style='color: #ff6600;'>{ticker}</span> — {pos['shares']} shares @ ${pos['avg_cost']:.2f} avg cost
+            </div>
+            """, unsafe_allow_html=True)
 
-PORTFOLIO OVERVIEW:
-- Total invested: ${total_invested:,.2f}
-- Current value: ${total_value:,.2f}
-- Total P&L: ${total_pl:,.2f} ({total_pl_pct:+.2f}%)
-- Number of positions: {len(portfolio_data)}
-- Best performer: {best['ticker']} ({best.get('change_pct', 0):+.2f}%)
-- Worst performer: {worst['ticker']} ({worst.get('change_pct', 0):+.2f}%)
+        st.divider()
+        period = st.selectbox("Analysis Period", ["1mo", "3mo", "6mo", "1y"], index=0)
 
-POSITION DETAILS:
-{positions_detail}
+        if st.button("Generate AI Analysis", use_container_width=False):
+            with st.spinner("Fetching data and generating analysis..."):
+                rows = []
+                for ticker, position in portfolio.items():
+                    df, error = fetch_stock_data(ticker, period=period)
+                    if not error and df is not None and len(df) >= 2:
+                        start = df.iloc[0]["close"]
+                        end = df.iloc[-1]["close"]
+                        change_pct = ((end - start) / start) * 100
+                        info = get_stock_info(ticker)
+                        current_price = info["current_price"] if info else end
+                        current_value = position["shares"] * float(current_price) if current_price != "N/A" else 0
+                        profit_loss = current_value - position["invested"]
+                        rows.append({
+                            "ticker": ticker,
+                            "shares": position["shares"],
+                            "avg_cost": position["avg_cost"],
+                            "invested": position["invested"],
+                            "start": round(start, 2),
+                            "end": round(end, 2),
+                            "change_pct": round(change_pct, 2),
+                            "current_value": round(current_value, 2),
+                            "profit_loss": round(profit_loss, 2)
+                        })
 
-Based on this REAL data, provide a personalized analysis with:
+                if rows:
+                    try:
+                        analysis = generate_portfolio_analysis(rows)
+                        st.markdown(f"""
+                        <div style='background:#111;border:1px solid #333;border-left:3px solid #ff6600;padding:24px;border-radius:2px;font-family:IBM Plex Sans,sans-serif;color:#e0e0e0;line-height:1.8;'>
+                            {analysis.replace(chr(10), '<br>')}
+                        </div>
+                        """, unsafe_allow_html=True)
+                    except Exception as e:
+                        st.error(f"Error generating analysis: {str(e)}")
 
-1. **Portfolio Health** (2-3 sentences): Overall assessment using their actual dollar P&L and percentage returns. Be specific — mention actual numbers.
+else:
+    # --- Custom Tickers ---
+    ticker_input = st.text_input("Enter Ticker Symbols (comma separated)", value="AAPL, MSFT, NVDA")
+    period = st.selectbox("Analysis Period", ["1mo", "3mo", "6mo", "1y"], index=0)
+    tickers = [t.strip().upper() for t in ticker_input.split(",") if t.strip()]
 
-2. **Position Highlights** (1 sentence per position): Reference their actual cost basis and current price. For example: "You bought NVDA at $149 and it's now at $217 — a $3,737 gain on your position."
+    if st.button("Generate AI Analysis", use_container_width=False):
+        with st.spinner("Fetching data and generating analysis..."):
+            rows = []
+            for ticker in tickers:
+                df, error = fetch_stock_data(ticker, period=period)
+                if not error and df is not None and len(df) >= 2:
+                    start = df.iloc[0]["close"]
+                    end = df.iloc[-1]["close"]
+                    change_pct = ((end - start) / start) * 100
+                    rows.append({
+                        "ticker": ticker,
+                        "start": round(start, 2),
+                        "end": round(end, 2),
+                        "change_pct": round(change_pct, 2),
+                        "invested": round(start, 2),
+                        "profit_loss": round(end - start, 2)
+                    })
 
-3. **Concentration & Risk**: Identify any positions that make up more than 20% of the portfolio and comment on concentration risk.
-
-4. **One Actionable Insight**: Based on the actual data — not generic advice. For example, if one stock is down significantly from cost basis, acknowledge it specifically.
-
-Be conversational but analytical. Use their actual numbers throughout. Do not give buy/sell advice. 
-Do not use generic phrases like "it's important to diversify" without tying it to their specific portfolio."""
-
-    response = client.chat.completions.create(
-        model="llama-3.3-70b-versatile",
-        messages=[{"role": "user", "content": prompt}],
-        max_tokens=1024,
-        temperature=0.7
-    )
-
-    return response.choices[0].message.content
+            if rows:
+                try:
+                    analysis = generate_portfolio_analysis(rows)
+                    st.markdown(f"""
+                    <div style='background:#111;border:1px solid #333;border-left:3px solid #ff6600;padding:24px;border-radius:2px;font-family:IBM Plex Sans,sans-serif;color:#e0e0e0;line-height:1.8;'>
+                        {analysis.replace(chr(10), '<br>')}
+                    </div>
+                    """, unsafe_allow_html=True)
+                except Exception as e:
+                    st.error(f"Error generating analysis: {str(e)}")
