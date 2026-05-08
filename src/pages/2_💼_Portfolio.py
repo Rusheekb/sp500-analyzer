@@ -105,7 +105,7 @@ else:
     </style>
     <div class="pos-container">
     """
-    for pos in valid_positions:
+    for pos in summary["positions"]:
         pl_class = "pos-positive" if pos["profit_loss"] >= 0 else "pos-negative"
         arrow = "▲" if pos["profit_loss"] >= 0 else "▼"
         positions_html += f"""
