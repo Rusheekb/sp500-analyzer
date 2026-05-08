@@ -1,40 +1,94 @@
-import json
 import os
+from sqlalchemy import create_engine, text
+from dotenv import load_dotenv
 
-PORTFOLIO_FILE = os.path.join(os.path.dirname(__file__), "portfolio.json")
+load_dotenv()
+
+DATABASE_URL = os.getenv("DATABASE_URL")
+
+# Fix for SQLAlchemy compatibility
+if DATABASE_URL and DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+
+engine = create_engine(DATABASE_URL)
+
+def init_db():
+    """Create portfolio table if it doesn't exist."""
+    with engine.connect() as conn:
+        conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS portfolio (
+                ticker VARCHAR(10) PRIMARY KEY,
+                shares FLOAT NOT NULL,
+                avg_cost FLOAT NOT NULL,
+                invested FLOAT NOT NULL
+            )
+        """))
+        conn.commit()
 
 def load_portfolio():
-    if os.path.exists(PORTFOLIO_FILE):
-        with open(PORTFOLIO_FILE, "r") as f:
-            return json.load(f)
-    return {}
+    """Load all positions as a dict."""
+    init_db()
+    with engine.connect() as conn:
+        result = conn.execute(text("SELECT ticker, shares, avg_cost, invested FROM portfolio"))
+        rows = result.fetchall()
+    return {
+        row[0]: {
+            "shares": row[1],
+            "avg_cost": row[2],
+            "invested": row[3]
+        }
+        for row in rows
+    }
 
 def save_portfolio(portfolio):
-    with open(PORTFOLIO_FILE, "w") as f:
-        json.dump(portfolio, f, indent=2)
+    """Overwrite entire portfolio — used for bulk updates."""
+    init_db()
+    with engine.connect() as conn:
+        conn.execute(text("DELETE FROM portfolio"))
+        for ticker, pos in portfolio.items():
+            conn.execute(text("""
+                INSERT INTO portfolio (ticker, shares, avg_cost, invested)
+                VALUES (:ticker, :shares, :avg_cost, :invested)
+            """), {
+                "ticker": ticker,
+                "shares": pos["shares"],
+                "avg_cost": pos["avg_cost"],
+                "invested": pos["invested"]
+            })
+        conn.commit()
 
 def add_position(ticker, shares, avg_cost):
-    portfolio = load_portfolio()
-    portfolio[ticker.upper()] = {
-        "shares": float(shares),
-        "avg_cost": float(avg_cost),
-        "invested": round(float(shares) * float(avg_cost), 2)
-    }
-    save_portfolio(portfolio)
-    return portfolio
+    """Add or update a position."""
+    init_db()
+    invested = round(float(shares) * float(avg_cost), 2)
+    with engine.connect() as conn:
+        conn.execute(text("""
+            INSERT INTO portfolio (ticker, shares, avg_cost, invested)
+            VALUES (:ticker, :shares, :avg_cost, :invested)
+            ON CONFLICT (ticker) DO UPDATE SET
+                shares = :shares,
+                avg_cost = :avg_cost,
+                invested = :invested
+        """), {
+            "ticker": ticker.upper(),
+            "shares": float(shares),
+            "avg_cost": float(avg_cost),
+            "invested": invested
+        })
+        conn.commit()
+    return load_portfolio()
 
 def remove_position(ticker):
-    portfolio = load_portfolio()
-    if ticker.upper() in portfolio:
-        del portfolio[ticker.upper()]
-        save_portfolio(portfolio)
-    return portfolio
+    """Remove a position."""
+    init_db()
+    with engine.connect() as conn:
+        conn.execute(text("DELETE FROM portfolio WHERE ticker = :ticker"),
+                    {"ticker": ticker.upper()})
+        conn.commit()
+    return load_portfolio()
 
 def get_portfolio_value(portfolio, current_prices):
-    """
-    Calculate current value, profit/loss for each position.
-    current_prices: dict of {ticker: current_price}
-    """
+    """Calculate current value and P&L for each position."""
     results = []
     total_invested = 0
     total_value = 0
