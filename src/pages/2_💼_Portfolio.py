@@ -74,6 +74,8 @@ else:
                 pass
 
     # --- Summary Metrics ---
+
+    summary = get_portfolio_value(portfolio, current_prices)
     st.markdown("#### 📊 Portfolio Summary")
     m1, m2, m3, m4 = st.columns(4)
     with m1:
