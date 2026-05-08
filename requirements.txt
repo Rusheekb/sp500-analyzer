@@ -3,6 +3,7 @@ pandas
 matplotlib
 yfinance
 sqlalchemy
+psycopg2-binary
 groq
 python-dotenv
 google-generativeai
