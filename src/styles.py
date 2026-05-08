@@ -5,6 +5,26 @@ def load_css():
 
 .stApp { background-color: #0a0a0a; color: #e0e0e0; font-family: 'IBM Plex Sans', sans-serif; }
 
+/* Nuclear option for button text */
+[data-testid="stSidebar"] .stButton > button > div > p {
+    color: #000000 !important;
+    font-weight: 700 !important;
+}
+
+button[kind="primary"] {
+    background-color: #ff6600 !important;
+    color: #000000 !important;
+}
+
+button[kind="primary"] p {
+    color: #000000 !important;
+}
+
+/* Target all button text paragraphs in sidebar */
+[data-testid="stSidebar"] button p {
+    color: #000000 !important;
+}
+
 [data-testid="stSidebar"] { background-color: #111111; border-right: 1px solid #ff6600; }
 [data-testid="stSidebar"] label,
 [data-testid="stSidebar"] p { color: #ff6600 !important; font-family: 'IBM Plex Mono', monospace !important; font-size: 12px !important; text-transform: uppercase; letter-spacing: 1px; }
