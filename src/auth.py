@@ -37,15 +37,24 @@ def init_auth_db():
             END $$;
         """))
 
-        # Update primary key to be ticker + user_id
+        # Update primary key to (ticker, user_id) only if not already done
         conn.execute(text("""
             DO $$
             BEGIN
-                IF EXISTS (
-                    SELECT 1 FROM information_schema.table_constraints
-                    WHERE constraint_name='portfolio_pkey'
+                IF NOT EXISTS (
+                    SELECT 1 FROM information_schema.key_column_usage
+                    WHERE constraint_name = 'portfolio_pkey'
+                    AND table_name = 'portfolio'
+                    AND column_name = 'user_id'
                 ) THEN
-                    ALTER TABLE portfolio DROP CONSTRAINT portfolio_pkey;
+                    DELETE FROM portfolio WHERE user_id IS NULL;
+                    IF EXISTS (
+                        SELECT 1 FROM information_schema.table_constraints
+                        WHERE constraint_name = 'portfolio_pkey'
+                        AND table_name = 'portfolio'
+                    ) THEN
+                        ALTER TABLE portfolio DROP CONSTRAINT portfolio_pkey;
+                    END IF;
                     ALTER TABLE portfolio ADD PRIMARY KEY (ticker, user_id);
                 END IF;
             END $$;
