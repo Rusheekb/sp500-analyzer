@@ -12,24 +12,8 @@ from portfolio import load_portfolio, add_position, remove_position, get_portfol
 
 st.set_page_config(page_title="Portfolio", layout="wide", page_icon="💼")
 
-st.markdown("""
-<style>
-@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;600&display=swap');
-.stApp { background-color: #0a0a0a; color: #e0e0e0; font-family: 'IBM Plex Sans', sans-serif; }
-[data-testid="stSidebar"] { background-color: #111111; border-right: 1px solid #ff6600; }
-h1 { color: #ff6600 !important; font-family: 'IBM Plex Mono', monospace !important; font-size: 24px !important; text-transform: uppercase !important; letter-spacing: 3px !important; border-bottom: 1px solid #ff6600; padding-bottom: 10px; }
-h2, h3, h4 { color: #ff6600 !important; font-family: 'IBM Plex Mono', monospace !important; font-size: 13px !important; text-transform: uppercase !important; letter-spacing: 2px !important; }
-hr { border-color: #222222 !important; }
-.stSelectbox > div > div { background-color: #1a1a1a !important; border: 1px solid #333333 !important; color: #e0e0e0 !important; border-radius: 2px !important; }
-[data-testid="stMetric"] { background-color: #111111; border: 1px solid #222222; padding: 10px; border-radius: 2px; }
-[data-testid="stMetricLabel"] { color: #888888 !important; font-family: 'IBM Plex Mono', monospace !important; font-size: 11px !important; text-transform: uppercase !important; }
-[data-testid="stMetricValue"] { color: #ffffff !important; font-family: 'IBM Plex Mono', monospace !important; }
-.stButton button { background-color: #1a1a1a !important; color: #ff6600 !important; border: 1px solid #ff6600 !important; border-radius: 2px !important; font-family: 'IBM Plex Mono', monospace !important; text-transform: uppercase !important; letter-spacing: 1px !important; }
-.stButton button:hover { background-color: #ff6600 !important; color: #000000 !important; }
-.stSuccess { background-color: #0a1f0a !important; border-left: 3px solid #00ff88 !important; }
-.stError { background-color: #1f0a0a !important; border-left: 3px solid #ff4444 !important; }
-</style>
-""", unsafe_allow_html=True)
+from styles import load_css
+st.markdown(load_css(), unsafe_allow_html=True)
 
 st.title("💼 Portfolio Builder")
 

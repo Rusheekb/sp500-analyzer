@@ -5,35 +5,8 @@ sys.path.append(os.path.dirname(__file__))
 
 st.set_page_config(page_title="Stock Analyzer", layout="wide", page_icon="📈")
 
-st.markdown("""
-<style>
-@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;600&display=swap');
-
-.stApp {
-    background-color: #0a0a0a;
-    color: #e0e0e0;
-    font-family: 'IBM Plex Sans', sans-serif;
-}
-[data-testid="stSidebar"] {
-    background-color: #111111;
-    border-right: 1px solid #ff6600;
-}
-h1 {
-    color: #ff6600 !important;
-    font-family: 'IBM Plex Mono', monospace !important;
-    text-transform: uppercase !important;
-    letter-spacing: 3px !important;
-    border-bottom: 1px solid #ff6600;
-    padding-bottom: 10px;
-}
-h2, h3 {
-    color: #ff6600 !important;
-    font-family: 'IBM Plex Mono', monospace !important;
-    text-transform: uppercase !important;
-    letter-spacing: 2px !important;
-}
-</style>
-""", unsafe_allow_html=True)
+from styles import load_css
+st.markdown(load_css(), unsafe_allow_html=True)
 
 st.title("📈 Real-Time Stock Analyzer")
 
