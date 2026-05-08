@@ -1,35 +1,60 @@
 import yfinance as yf
 import pandas as pd
+from datetime import datetime, timedelta
 
-tickers = ["AAPL", "MSFT", "GOOGL", "AMZN", "JPM"]
-
-def fetch_stock_data(tickers, start="2020-01-01", end="2024-12-31"):
-    all_data = []
-
-    for ticker in tickers:
-        print(f"Fetching {ticker}...")
-        df = yf.download(ticker, start=start, end=end, auto_adjust=True)
+def fetch_stock_data(ticker, period="1y"):
+    """
+    Fetch real-time stock data for any ticker.
+    period options: 1d, 5d, 1mo, 3mo, 6mo, 1y, 2y, 5y
+    """
+    try:
+        stock = yf.Ticker(ticker)
+        df = stock.history(period=period)
         
-        # Flatten columns if multi-level
-        df.columns = [col[0].lower() if isinstance(col, tuple) else col.lower() 
-                     for col in df.columns]
+        if df.empty:
+            return None, f"No data found for ticker: {ticker}"
         
-        # Reset index so Date becomes a column
+        # Clean up
         df = df.reset_index()
         df.columns = [col.lower() for col in df.columns]
-        
-        # Add ticker column
-        df["ticker"] = ticker
-        
-        # Keep only what we need
+        df["ticker"] = ticker.upper()
+        df["date"] = pd.to_datetime(df["date"]).dt.tz_localize(None)
         df = df[["date", "ticker", "open", "high", "low", "close", "volume"]]
         
-        all_data.append(df)
+        return df, None
+    
+    except Exception as e:
+        return None, str(e)
 
-    combined = pd.concat(all_data, ignore_index=True)
-    combined.to_csv("data/raw_stock_data.csv", index=False)
-    print(f"Done! {len(combined)} rows saved to data/raw_stock_data.csv")
-    return combined
+def get_stock_info(ticker):
+    """Get company info for a ticker."""
+    try:
+        stock = yf.Ticker(ticker)
+        info = stock.info
+        return {
+            "name": info.get("longName", ticker),
+            "sector": info.get("sector", "N/A"),
+            "industry": info.get("industry", "N/A"),
+            "market_cap": info.get("marketCap", "N/A"),
+            "current_price": info.get("currentPrice", "N/A"),
+            "52w_high": info.get("fiftyTwoWeekHigh", "N/A"),
+            "52w_low": info.get("fiftyTwoWeekLow", "N/A"),
+            "pe_ratio": info.get("trailingPE", "N/A"),
+        }
+    except:
+        return None
 
 if __name__ == "__main__":
-    fetch_stock_data(tickers)
+    # Test with a few tickers
+    for ticker in ["AAPL", "NVDA", "TSLA"]:
+        df, error = fetch_stock_data(ticker, period="1mo")
+        if error:
+            print(f"Error: {error}")
+        else:
+            print(f"{ticker}: {len(df)} rows fetched")
+        
+        info = get_stock_info(ticker)
+        if info:
+            print(f"Company: {info['name']}")
+            print(f"Current Price: ${info['current_price']}")
+            print()
