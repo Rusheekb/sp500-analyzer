@@ -1,0 +1,67 @@
+{
+  "NVDA": {
+    "shares": 55.12,
+    "avg_cost": 149.23,
+    "invested": 8225.56
+  },
+  "AMD": {
+    "shares": 5.0,
+    "avg_cost": 120.37,
+    "invested": 601.85
+  },
+  "QQQM": {
+    "shares": 26.483,
+    "avg_cost": 241.87,
+    "invested": 6405.44
+  },
+  "AMZN": {
+    "shares": 20.0,
+    "avg_cost": 212.63,
+    "invested": 4252.6
+  },
+  "AAPL": {
+    "shares": 5.0,
+    "avg_cost": 230.59,
+    "invested": 1152.95
+  },
+  "MSFT": {
+    "shares": 10.0,
+    "avg_cost": 402.0,
+    "invested": 4020.0
+  },
+  "META": {
+    "shares": 10.0,
+    "avg_cost": 631.0,
+    "invested": 6310.0
+  },
+  "NFLX": {
+    "shares": 50.0,
+    "avg_cost": 95.5,
+    "invested": 4775.0
+  },
+  "SPYM": {
+    "shares": 50.0,
+    "avg_cost": 79.55,
+    "invested": 3977.5
+  },
+  "SOFI": {
+    "shares": 275.0,
+    "avg_cost": 21.0,
+    "invested": 5775.0
+  },
+  "GOOG": {
+    "shares": 4.0,
+    "avg_cost": 175.6,
+    "invested": 702.4
+  },
+  "TSLA": {
+    "shares": 2.0,
+    "avg_cost": 220.0,
+    "invested": 440.0
+  },
+  "FBTC": {
+    "shares": 16.8,
+    "avg_cost": 69.0,
+    "invested": 1159.2
+  }
+}

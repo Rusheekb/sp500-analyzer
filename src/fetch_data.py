@@ -36,7 +36,7 @@ def get_stock_info(ticker):
             "sector": info.get("sector", "N/A"),
             "industry": info.get("industry", "N/A"),
             "market_cap": info.get("marketCap", "N/A"),
-            "current_price": info.get("currentPrice", "N/A"),
+            "current_price": info.get("currentPrice") or info.get("regularMarketPrice") or info.get("navPrice", "N/A"),
             "52w_high": info.get("fiftyTwoWeekHigh", "N/A"),
             "52w_low": info.get("fiftyTwoWeekLow", "N/A"),
             "pe_ratio": info.get("trailingPE", "N/A"),
