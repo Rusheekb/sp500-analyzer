@@ -15,9 +15,17 @@ st.set_page_config(page_title="Portfolio", layout="wide", page_icon="💼")
 from styles import load_css
 st.markdown(load_css(), unsafe_allow_html=True)
 
+# Auth check
+if "user_id" not in st.session_state or not st.session_state.user_id:
+    st.warning("Please log in first to access your portfolio.")
+    st.page_link("pages/0_🔐_Login.py", label="Go to Login", icon="🔐")
+    st.stop()
+
+user_id = st.session_state.user_id
+
 st.title("💼 Portfolio Builder")
 
-portfolio = load_portfolio()
+portfolio = load_portfolio(user_id)
 
 # --- Add Position ---
 with st.expander("➕ Add / Update Position", expanded=len(portfolio) == 0):
@@ -31,7 +39,7 @@ with st.expander("➕ Add / Update Position", expanded=len(portfolio) == 0):
 
     if st.button("Save Position"):
         if new_ticker:
-            add_position(new_ticker, new_shares, new_avg_cost)
+            add_position(new_ticker, new_shares, new_avg_cost, user_id)
             st.success(f"✅ {new_ticker} saved to portfolio!")
             st.rerun()
         else:
@@ -214,6 +222,6 @@ else:
     st.markdown("#### 🗑️ Remove Position")
     remove_ticker = st.selectbox("Select position to remove", list(portfolio.keys()))
     if st.button("Remove Position"):
-        remove_position(remove_ticker)
+        remove_position(remove_ticker, user_id)
         st.success(f"Removed {remove_ticker} from portfolio.")
         st.rerun()

@@ -1,6 +1,13 @@
 import streamlit as st
 import sys
 import os
+
+# Initialize session state
+if "user_id" not in st.session_state:
+    st.session_state.user_id = None
+if "username" not in st.session_state:
+    st.session_state.username = None
+
 sys.path.append(os.path.dirname(__file__))
 
 st.set_page_config(page_title="Stock Analyzer", layout="wide", page_icon="📈")

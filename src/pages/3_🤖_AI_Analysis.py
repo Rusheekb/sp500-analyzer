@@ -20,6 +20,14 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
+# Auth check
+if "user_id" not in st.session_state or not st.session_state.user_id:
+    st.warning("Please log in first to access your portfolio.")
+    st.page_link("pages/0_🔐_Login.py", label="Go to Login", icon="🔐")
+    st.stop()
+
+user_id = st.session_state.user_id
+
 # --- Mode selector ---
 mode = st.radio(
     "Analyze:",
@@ -30,7 +38,7 @@ mode = st.radio(
 st.divider()
 
 if mode == "My Portfolio":
-    portfolio = load_portfolio()
+    portfolio = load_portfolio(user_id)
 
     if not portfolio:
         st.info("No portfolio positions found. Add stocks on the Portfolio page first.")
