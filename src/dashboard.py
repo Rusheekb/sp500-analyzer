@@ -8,6 +8,7 @@ import matplotlib.dates as mdates
 from fetch_data import fetch_stock_data, get_stock_info
 import streamlit.components.v1 as components
 from ai_analysis import generate_portfolio_analysis
+import yfinance as yf
 
 st.set_page_config(page_title="Stock Analyzer", layout="wide", page_icon="📈")
 
@@ -358,6 +359,70 @@ if analyze_btn or tickers:
         st.pyplot(fig3)
 
         st.divider()
+        # --- News Feed ---
+        st.subheader("📰 Latest News")
+
+        def get_news(tickers, max_per_ticker=3):
+            seen = set()
+            all_news = []
+            
+            for ticker in tickers:
+                try:
+                    stock = yf.Ticker(ticker)
+                    news = stock.news or []
+                    count = 0
+                    for item in news:
+                        content = item.get("content", {})
+                        title = content.get("title", "")
+                        url = content.get("clickThroughUrl", {}).get("url", "")
+                        summary = content.get("summary", "")
+                        source = content.get("provider", {}).get("displayName", "")
+                        date = content.get("displayTime", "")
+                        thumbnail = content.get("thumbnail", {})
+                        img_url = ""
+                        if thumbnail and "resolutions" in thumbnail and thumbnail["resolutions"]:
+                            img_url = thumbnail["resolutions"][-1].get("url", "")
+                        elif thumbnail:
+                            img_url = thumbnail.get("originalUrl", "")
+
+                        if title and url and title not in seen:
+                            seen.add(title)
+                            all_news.append({
+                                "ticker": ticker,
+                                "title": title,
+                                "summary": summary,
+                                "source": source,
+                                "date": date[:10] if date else "",
+                                "url": url,
+                                "img_url": img_url
+                            })
+                            count += 1
+                            if count >= max_per_ticker:
+                                break
+                except:
+                    pass
+            return all_news
+
+        news_items = get_news(tickers)
+
+        if not news_items:
+            st.info("No news found for selected tickers.")
+        else:
+            # Filter by ticker
+            news_filter = st.selectbox("Filter news by ticker", ["All"] + tickers, key="news_filter")
+            filtered_news = news_items if news_filter == "All" else [n for n in news_items if n["ticker"] == news_filter]
+
+            for item in filtered_news:
+                col1, col2 = st.columns([1, 4])
+                with col1:
+                    if item["img_url"]:
+                        st.image(item["img_url"], width=120)
+                with col2:
+                    st.markdown(f"**[{item['title']}]({item['url']})**")
+                    if item["summary"]:
+                        st.caption(item["summary"][:150] + "...")
+                    st.caption(f"📌 {item['ticker']} · {item['source']} · {item['date']}")
+                st.divider()
 
         # --- Raw Data ---
         st.subheader("🗃️ Raw Data")
