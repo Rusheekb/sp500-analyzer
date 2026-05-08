@@ -2,6 +2,9 @@
 
 A data engineering project that pulls real stock market data, stores it in a SQL database, and visualizes insights through an interactive dashboard.
 
+## 🌐 Live Demo
+👉 [stock-analyzer-project.streamlit.app](https://stock-analyzer-project.streamlit.app)
+
 ## 🔍 Overview
 
 This project analyzes the performance of 5 major S&P 500 stocks (AAPL, MSFT, GOOGL, AMZN, JPM) from 2020-2024 using Python, SQL, and Streamlit.
