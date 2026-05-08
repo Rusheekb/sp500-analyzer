@@ -103,8 +103,29 @@ hr { border-color: #222222 !important; }
 .stRadio label { color: #888888 !important; font-family: 'IBM Plex Mono', monospace !important; font-size: 12px !important; text-transform: uppercase !important; }
 .stRadio [data-checked="true"] label { color: #ff6600 !important; }
 
-/* Slider */
-.stSlider [data-baseweb="slider"] div { background-color: #ff6600 !important; }
+/* Slider track */
+[data-testid="stSidebar"] [data-baseweb="slider"] [data-testid="stSlider"] div {
+    background-color: #333333 !important;
+}
+
+/* Slider filled track */
+[data-baseweb="slider"] div[role="progressbar"] {
+    background-color: #ff6600 !important;
+}
+
+/* Slider thumb */
+[data-baseweb="slider"] div[role="slider"] {
+    background-color: #ff6600 !important;
+    border-color: #ff6600 !important;
+}
+
+/* Slider track background */
+[data-baseweb="slider"] > div > div:first-child {
+    background-color: #333333 !important;
+}
+
+/* Slider thumb only */
+[data-baseweb="slider"] [role="slider"] { background-color: #ff6600 !important; border-color: #ff6600 !important; }
 
 /* Number input */
 .stNumberInput input { background-color: #1a1a1a !important; color: #ffffff !important; border: 1px solid #333 !important; font-family: 'IBM Plex Mono', monospace !important; }
